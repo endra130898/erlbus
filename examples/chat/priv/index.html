@@ -55,10 +55,14 @@
       };
 
       function showMessage(data) {
-        if (data.sender == 'admin') {
-          jQuery('#chatContainer').append('<div>' + data.msg + '</div>');
-        } else {
-          jQuery('#chatContainer').append('<div>' + data.sender + ' -> ' + data.msg + '</div>');
+        if (data.type == 'people_size') {
+            jQuery('#peopleSize').text(data.msg);
+        } else if (data.type == 'chat') {        
+          if (data.sender == 'admin') {
+            jQuery('#chatContainer').append('<div>' + data.msg + '</div>');
+          } else {
+            jQuery('#chatContainer').append('<div>' + data.sender + ' -> ' + data.msg + '</div>');
+          }
         }
       };
 
@@ -78,8 +82,8 @@
   <body>
     <div id="alertContainer"></div>
     <input id="connectButton" type="button" value="Join the Chat Room!" onclick="connect();"/>
-
     <div id="roomContainer">
+      <p id="peopleSize"></p>
       <div id="chatContainer"></div>
       <form onsubmit="sendMessage(); return false;">
         <span>

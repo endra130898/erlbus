@@ -21,24 +21,26 @@ websocket_init(_Type, Req, _Opts) ->
   Name = get_name(Req),
   Handler = ebus_proc:spawn_handler(fun chat_erlbus_handler:handle_msg/2, [self()]),
   ebus:sub(Handler, ?CHATROOM_NAME),
-  ebus:pub(?CHATROOM_NAME, {list_to_binary("admin"), list_to_binary(binary_to_list(Name) ++ " join the chat room")}),
+  ebus:pub(?CHATROOM_NAME, {admin, list_to_binary(binary_to_list(Name) ++ " join the chat room"), chat}),
+    ebus:pub(?CHATROOM_NAME, {admin, list_to_binary(integer_to_list(length(ebus:subscribers(?CHATROOM_NAME))) ++ " people(s) in the chat room"), people_size}),
   {ok, Req, #state{name = Name, handler = Handler}, ?TIMEOUT}.
 
 websocket_handle({text, Msg}, Req, State) ->
-  ebus:pub(?CHATROOM_NAME, {State#state.name, Msg}),
+  ebus:pub(?CHATROOM_NAME, {State#state.name, Msg, chat}),
   {ok, Req, State};
 websocket_handle(_Data, Req, State) ->
   {ok, Req, State}.
 
-websocket_info({message_published, {Sender, Msg}}, Req, State) ->
-  {reply, {text, jiffy:encode({[{sender, Sender}, {msg, Msg}]})}, Req, State};
+websocket_info({message_published, {Sender, Msg, Type}}, Req, State) ->
+  {reply, {text, jiffy:encode({[{sender, Sender}, {msg, Msg}, {type, Type}]})}, Req, State};
 websocket_info(_Info, Req, State) ->
   {ok, Req, State}.
 
 websocket_terminate(_Reason, _Req, State) ->
   % Unsubscribe the handler
-  ebus:pub(?CHATROOM_NAME, {list_to_binary("admin"), list_to_binary(binary_to_list(State#state.name) ++ " leave the chat room")}),
+  ebus:pub(?CHATROOM_NAME, {admin, list_to_binary(binary_to_list(State#state.name) ++ " leave the chat room"), chat}),
   ebus:unsub(State#state.handler, ?CHATROOM_NAME),
+  ebus:pub(?CHATROOM_NAME, {admin, list_to_binary(integer_to_list(length(ebus:subscribers(?CHATROOM_NAME))) ++ " people(s) in the chat room"), people_size}),
   ok.
 
 %% Private methods

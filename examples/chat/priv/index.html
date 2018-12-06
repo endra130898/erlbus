@@ -55,7 +55,11 @@
       };
 
       function showMessage(data) {
-        jQuery('#chatContainer').append('<div>' + data.sender + ' -> ' + data.msg + '</div>');
+        if (data.sender == 'admin') {
+          jQuery('#chatContainer').append('<div>' + data.msg + '</div>');
+        } else {
+          jQuery('#chatContainer').append('<div>' + data.sender + ' -> ' + data.msg + '</div>');
+        }
       };
 
       function showAlert(txt) {
